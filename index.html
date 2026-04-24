@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  
+<head>
+  <meta charset="UTF-8" />
+  <title>Tasks</title>
+  <p id="version"></p>
+</head>
+<body>
+   <h1>Tasks</h1>
+
+  <p id="version"></p> <!-- 👈 HÄR -->
+
+  <input id="title" placeholder="Ny task" />
+  <button onclick="addTask()">Add</button>
+
+  <ul id="list"></ul>
+
+  <script>
+    const API = "http://task-alb-1470943284.eu-north-1.elb.amazonaws.com";
+
+    async function loadVersion() {
+      const res = await fetch(`${API}/health`);
+      const data = await res.json();
+
+      document.getElementById("version").innerText =
+        `Frontend v1 | Backend ${data.version}`;
+    }
+
+    async function loadTasks() {
+      const res = await fetch(`${API}/tasks`);
+      const data = await res.json();
+
+      const list = document.getElementById("list");
+      list.innerHTML = "";
+
+      data.forEach(t => {
+        const li = document.createElement("li");
+        li.innerText = `${t.title} (${t.done})`;
+
+        const btn = document.createElement("button");
+        btn.innerText = "Delete";
+        btn.onclick = () => deleteTask(t.id);
+
+        li.appendChild(btn);
+        list.appendChild(li);
+      });
+    }
+
+    async function addTask() {
+      const title = document.getElementById("title").value;
+
+      await fetch(`${API}/tasks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title })
+      });
+
+      loadTasks();
+    }
+
+    async function deleteTask(id) {
+      await fetch(`${API}/tasks/${id}`, {
+        method: "DELETE"
+      });
+
+      loadTasks();
+    }
+
+    loadVersion();
+    loadTasks();
+  </script>
+</body>
+</html>
