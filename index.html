@@ -1,15 +1,15 @@
+
 <!DOCTYPE html>
 <html>
-  
 <head>
   <meta charset="UTF-8" />
   <title>Tasks</title>
-  <p id="version"></p>
 </head>
-<body>
-   <h1>Tasks</h1>
 
-  <p id="version"></p> <!-- 👈 HÄR -->
+<body>
+  <h1>Tasks</h1>
+
+  <p id="version"></p>
 
   <input id="title" placeholder="Ny task" />
   <button onclick="addTask()">Add</button>
@@ -17,7 +17,9 @@
   <ul id="list"></ul>
 
   <script>
-    const API = "http://task-alb-1470943284.eu-north-1.elb.amazonaws.com";
+    // 👉 CloudFront endpoint (HTTPS)
+    const API = "https://d1op30oze7ecvj.cloudfront.net";
+    // const API = "http://task-alb-1470943284.eu-north-1.elb.amazonaws.com";  //old
 
     async function loadVersion() {
       const res = await fetch(`${API}/health`);
@@ -56,6 +58,8 @@
         body: JSON.stringify({ title })
       });
 
+      document.getElementById("title").value = ""; // nice UX
+
       loadTasks();
     }
 
@@ -67,6 +71,7 @@
       loadTasks();
     }
 
+    // Init
     loadVersion();
     loadTasks();
   </script>
