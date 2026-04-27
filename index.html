@@ -17,7 +17,7 @@
   <ul id="list"></ul>
 
   <script>
-    // 👉 CloudFront endpoint (HTTPS)
+    // CloudFront endpoint (HTTPS)
     const API = "https://d1op30oze7ecvj.cloudfront.net";
     // const API = "http://task-alb-1470943284.eu-north-1.elb.amazonaws.com";  //old
 
@@ -30,24 +30,30 @@
     }
 
     async function loadTasks() {
-      const res = await fetch(`${API}/tasks`);
-      const data = await res.json();
+  const res = await fetch(`${API}/tasks`);
+  const data = await res.json();
 
-      const list = document.getElementById("list");
-      list.innerHTML = "";
+  const list = document.getElementById("list");
+  list.innerHTML = "";
 
-      data.forEach(t => {
-        const li = document.createElement("li");
-        li.innerText = `${t.title} (${t.done})`;
+  // skydd så sidan inte kraschar
+  if (!Array.isArray(data)) {
+    console.error("Fel format:", data);
+    return;
+  }
 
-        const btn = document.createElement("button");
-        btn.innerText = "Delete";
-        btn.onclick = () => deleteTask(t.id);
+  data.forEach(t => {
+    const li = document.createElement("li");
+    li.innerText = `${t.title} (${t.done})`;
 
-        li.appendChild(btn);
-        list.appendChild(li);
-      });
-    }
+    const btn = document.createElement("button");
+    btn.innerText = "Delete";
+    btn.onclick = () => deleteTask(t.id);
+
+    li.appendChild(btn);
+    list.appendChild(li);
+  });
+}
 
     async function addTask() {
       const title = document.getElementById("title").value;
@@ -58,7 +64,7 @@
         body: JSON.stringify({ title })
       });
 
-      document.getElementById("title").value = ""; // nice UX
+      document.getElementById("title").value = ""; 
 
       loadTasks();
     }
