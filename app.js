@@ -1,139 +1,81 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8" />
-  <title>Tasks</title>
+const FRONTEND_VERSION = "v3";
+const FRONTEND_BUILD_TIME = new Date().toLocaleString();
+const API = "https://d1op30oze7ecvj.cloudfront.net";
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 600px;
-      margin: 40px auto;
-    }
+async function loadVersion() {
+  try {
+    const res = await fetch(`${API}/health`);
+    const data = await res.json();
 
-    .input-row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
+    document.getElementById("version").innerText =
+      `Frontend ${FRONTEND_VERSION} (${FRONTEND_BUILD_TIME}) | Backend ${data.version}`;
+  } catch (err) {
+    document.getElementById("version").innerText =
+      `Frontend ${FRONTEND_VERSION} | Backend error`;
+    console.error(err);
+  }
+}
 
-    input {
-      flex: 1;
-      padding: 10px;
-    }
+async function loadTasks() {
+  const res = await fetch(`${API}/tasks`);
+  const data = await res.json();
 
-    button {
-      padding: 10px 16px;
-      cursor: pointer;
-    }
+  const list = document.getElementById("list");
+  list.innerHTML = "";
 
-    .list {
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      overflow: hidden;
-    }
+  if (!Array.isArray(data)) {
+    console.error("Fel format:", data);
+    return;
+  }
 
-    .task {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px;
-      border-bottom: 1px solid #eee;
-    }
+  data.forEach(t => {
+    const row = document.createElement("div");
+    row.className = "task";
 
-    .task:last-child {
-      border-bottom: none;
-    }
+    const text = document.createElement("span");
+    text.innerText = `${t.title} ${t.done ? "✅" : ""}`;
 
-    .delete-btn {
-      border: 1px solid red;
-      color: red;
-      background: white;
-      padding: 6px 12px;
-    }
-  </style>
-</head>
+    const btn = document.createElement("button");
+    btn.innerText = "Delete";
+    btn.className = "delete-btn";
+    btn.onclick = () => deleteTask(t.id);
 
-<body>
-  <h1>Tasks</h1>
+    row.appendChild(text);
+    row.appendChild(btn);
 
-  <p id="version"></p>
+    list.appendChild(row);
+  });
+}
 
-  <div class="input-row">
-    <input id="title" placeholder="Ny task" />
-    <button onclick="addTask()">Add</button>
-  </div>
+async function addTask() {
+  const input = document.getElementById("title");
+  const title = input.value;
 
-  <div id="list" class="list"></div>
+  if (!title) return;
 
-  <script>
-    const API = "https://d1op30oze7ecvj.cloudfront.net";
+  await fetch(`${API}/tasks`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title })
+  });
 
-    async function loadVersion() {
-      const res = await fetch(`${API}/health`);
-      const data = await res.json();
+  input.value = "";
+  loadTasks();
+}
 
-      document.getElementById("version").innerText =
-        `Frontend v1 | Backend ${data.version}`;
-    }
+async function deleteTask(id) {
+  await fetch(`${API}/tasks/${id}`, {
+    method: "DELETE"
+  });
 
-    async function loadTasks() {
-      const res = await fetch(`${API}/tasks`);
-      const data = await res.json();
+  loadTasks();
+}
 
-      const list = document.getElementById("list");
-      list.innerHTML = "";
+document.getElementById("title").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") {
+    addTask();
+  }
+});
 
-      if (!Array.isArray(data)) {
-        console.error("Fel format:", data);
-        return;
-      }
-
-      data.forEach(t => {
-        const row = document.createElement("div");
-        row.className = "task";
-
-        const text = document.createElement("span");
-        text.innerText = `${t.title} (${t.done})`;
-
-        const btn = document.createElement("button");
-        btn.innerText = "Delete";
-        btn.className = "delete-btn";
-        btn.onclick = () => deleteTask(t.id);
-
-        row.appendChild(text);
-        row.appendChild(btn);
-
-        list.appendChild(row);
-      });
-    }
-
-    async function addTask() {
-      const input = document.getElementById("title");
-      const title = input.value;
-
-      if (!title) return;
-
-      await fetch(`${API}/tasks`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title })
-      });
-
-      input.value = "";
-      loadTasks();
-    }
-
-    async function deleteTask(id) {
-      await fetch(`${API}/tasks/${id}`, {
-        method: "DELETE"
-      });
-
-      loadTasks();
-    }
-
-    loadVersion();
-    loadTasks();
-  </script>
-</body>
-</html
+loadVersion();
+loadTasks();

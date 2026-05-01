@@ -1,9 +1,10 @@
-
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8" />
   <title>Tasks</title>
+
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
@@ -11,75 +12,13 @@
 
   <p id="version"></p>
 
-  <input id="title" placeholder="Ny task" />
-  <button onclick="addTask()">Add</button>
+  <div class="input-row">
+    <input id="title" placeholder="Ny task" />
+    <button onclick="addTask()">Add</button>
+  </div>
 
-  <ul id="list"></ul>
+  <div id="list" class="list"></div>
 
-  <script>
-    // CloudFront endpoint (HTTPS)
-    const API = "https://d1op30oze7ecvj.cloudfront.net";
-    // const API = "http://task-alb-1470943284.eu-north-1.elb.amazonaws.com";  //old
-
-    async function loadVersion() {
-      const res = await fetch(`${API}/health`);
-      const data = await res.json();
-
-      document.getElementById("version").innerText =
-        `Frontend v1 | Backend ${data.version}`;
-    }
-
-    async function loadTasks() {
-  const res = await fetch(`${API}/tasks`);
-  const data = await res.json();
-
-  const list = document.getElementById("list");
-  list.innerHTML = "";
-
-  // skydd så sidan inte kraschar
-  if (!Array.isArray(data)) {
-    console.error("Fel format:", data);
-    return;
-  }
-
-  data.forEach(t => {
-    const li = document.createElement("li");
-    li.innerText = `${t.title} (${t.done})`;
-
-    const btn = document.createElement("button");
-    btn.innerText = "Delete";
-    btn.onclick = () => deleteTask(t.id);
-
-    li.appendChild(btn);
-    list.appendChild(li);
-  });
-}
-
-    async function addTask() {
-      const title = document.getElementById("title").value;
-
-      await fetch(`${API}/tasks`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title })
-      });
-
-      document.getElementById("title").value = ""; 
-
-      loadTasks();
-    }
-
-    async function deleteTask(id) {
-      await fetch(`${API}/tasks/${id}`, {
-        method: "DELETE"
-      });
-
-      loadTasks();
-    }
-
-    // Init
-    loadVersion();
-    loadTasks();
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
